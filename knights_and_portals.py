@@ -3,75 +3,71 @@
 from collections import deque
 from typing import List, Tuple
 
-
 def bfs(grid: List[List[int]], start: Tuple[int, int]) -> List[List[int]]:
     """
-    Perform BFS to find shortest distance from start to all reachable cells.
+    Perform BFS to compute shortest distances from start cell to all others.
 
     Args:
-        grid: 2D grid of 0s and 1s
-        start: starting coordinate (x, y)
+        grid: 2D list of 0s (empty) and 1s (blocked)
+        start: (x, y) coordinate
 
     Returns:
-        2D list of distances
+        2D list of distances from start
     """
     n, m = len(grid), len(grid[0])
-    dist = [[-1] * m for _ in range(n)]
-    q = deque()
-    q.append(start)
+    dist = [[-1 for _ in range(m)] for _ in range(n)]
+    queue = deque([start])
     dist[start[0]][start[1]] = 0
 
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    while q:
-        x, y = q.popleft()
+    while queue:
+        x, y = queue.popleft()
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
-            if 0 <= nx < n and 0 <= ny < m and grid[nx][ny] == 0 and dist[nx][ny] == -1:
-                dist[nx][ny] = dist[x][y] + 1
-                q.append((nx, ny))
+            if 0 <= nx < n and 0 <= ny < m:
+                if grid[nx][ny] == 0 and dist[nx][ny] == -1:
+                    dist[nx][ny] = dist[x][y] + 1
+                    queue.append((nx, ny))
 
     return dist
 
-
 def shortest_path_with_portal(grid: List[List[int]]) -> int:
     """
-    Finds the shortest path from top-left to bottom-right using one optional teleport.
+    Find shortest path from top-left to bottom-right with one teleport.
 
     Args:
-        grid: 2D grid of 0s (open) and 1s (walls)
+        grid: 2D list representing the grid
 
     Returns:
-        Integer: minimum steps to reach (n-1, m-1) or -1 if not reachable.
+        Integer representing shortest path length or -1 if unreachable
     """
     n, m = len(grid), len(grid[0])
-    if grid[0][0] == 1 or grid[n - 1][m - 1] == 1:
+
+    if grid[0][0] == 1 or grid[n-1][m-1] == 1:
         return -1
 
     start_dist = bfs(grid, (0, 0))
     end_dist = bfs(grid, (n - 1, m - 1))
 
-    # Direct path without teleport
-    min_dist = start_dist[n - 1][m - 1] if start_dist[n - 1][m - 1] != -1 else float('inf')
+    result = start_dist[n-1][m-1] if start_dist[n-1][m-1] != -1 else float('inf')
 
-    # Find shortest teleport-enhanced path
     empty_cells = [(i, j) for i in range(n) for j in range(m) if grid[i][j] == 0]
 
     for (x1, y1) in empty_cells:
         for (x2, y2) in empty_cells:
-            if (x1, y1) == (x2, y2):
-                continue
-            if start_dist[x1][y1] != -1 and end_dist[x2][y2] != -1:
-                min_dist = min(min_dist, start_dist[x1][y1] + 1 + end_dist[x2][y2])
+            if (x1, y1) != (x2, y2):
+                if start_dist[x1][y1] != -1 and end_dist[x2][y2] != -1:
+                    result = min(result, start_dist[x1][y1] + 1 + end_dist[x2][y2])
 
-    return min_dist if min_dist != float('inf') else -1
+    return result if result != float('inf') else -1
 
 
 def run_tests():
     """
-    Run test cases to validate the algorithm.
+    Run sample test cases
     """
-    print("=== KNIGHTS AND PORTALS TESTS ===\n")
+    print("=== Knights and Portals: Sample Test Cases ===\n")
 
     test_cases = [
         {
@@ -116,13 +112,11 @@ def run_tests():
     for idx, test in enumerate(test_cases, 1):
         result = shortest_path_with_portal(test["grid"])
         print(f"Test Case {idx}:")
-        print("Input Grid:")
         for row in test["grid"]:
             print(" ", row)
-        print(f"Expected Output: {test['expected']}")
-        print(f"Your Output    : {result}")
-        print("Test", "Passed\n" if result == test["expected"] else "Failed\n")
-
+        print(f"Expected: {test['expected']}, Got: {result}")
+        print("Result:", "✅ Passed\n" if result == test["expected"] else "❌ Failed\n")
 
 if __name__ == "__main__":
     run_tests()
+
